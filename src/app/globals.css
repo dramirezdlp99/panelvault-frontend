@@ -1,0 +1,152 @@
+@import "tailwindcss";
+
+/*
+ * Sistema de diseño "cómic editorial".
+ * Los colores viven en variables CSS (--pv-*) que cambian según data-theme en <html>;
+ * Tailwind solo expone nombres semánticos (paper, ink, accent...), así cada
+ * componente funciona en modo claro y oscuro sin clases "dark:" repetidas.
+ */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+:root,
+[data-theme="light"] {
+  color-scheme: light;
+  --pv-paper: #faf6ee;
+  --pv-surface: #ffffff;
+  --pv-surface-muted: #f3ede1;
+  --pv-ink: #16161a;
+  --pv-ink-muted: #5a524a;
+  --pv-line: #16161a;
+  --pv-accent: #c7321f;
+  --pv-accent-hover: #a82a19;
+  --pv-on-accent: #ffffff;
+  --pv-highlight: #ffd23f;
+  --pv-on-highlight: #16161a;
+  --pv-ai: #12a4a0;
+  --pv-ai-ink: #0e7c78;
+  --pv-success: #1e7f4f;
+  --pv-dot: rgb(22 22 26 / 0.09);
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+  --pv-paper: #141417;
+  --pv-surface: #1c1c21;
+  --pv-surface-muted: #25252b;
+  --pv-ink: #efeae0;
+  --pv-ink-muted: #a69e92;
+  --pv-line: #e9e3d5;
+  --pv-accent: #ff6a52;
+  --pv-accent-hover: #ff8470;
+  --pv-on-accent: #16161a;
+  --pv-highlight: #ffd23f;
+  --pv-on-highlight: #16161a;
+  --pv-ai: #3fd0ca;
+  --pv-ai-ink: #3fd0ca;
+  --pv-success: #4cc38a;
+  --pv-dot: rgb(239 234 224 / 0.07);
+}
+
+@theme inline {
+  --color-paper: var(--pv-paper);
+  --color-surface: var(--pv-surface);
+  --color-surface-muted: var(--pv-surface-muted);
+  --color-ink: var(--pv-ink);
+  --color-ink-muted: var(--pv-ink-muted);
+  --color-line: var(--pv-line);
+  --color-accent: var(--pv-accent);
+  --color-accent-hover: var(--pv-accent-hover);
+  --color-on-accent: var(--pv-on-accent);
+  --color-highlight: var(--pv-highlight);
+  --color-on-highlight: var(--pv-on-highlight);
+  --color-ai: var(--pv-ai);
+  --color-ai-ink: var(--pv-ai-ink);
+  --color-success: var(--pv-success);
+
+  --font-display: var(--font-bricolage), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, monospace;
+
+  --radius-panel: 10px;
+  --radius-chip: 6px;
+}
+
+/* Sombras "de imprenta": sólidas, sin difuminado, del color de la tinta. */
+@utility shadow-hard {
+  box-shadow: 4px 4px 0 0 var(--pv-line);
+}
+@utility shadow-hard-sm {
+  box-shadow: 2px 2px 0 0 var(--pv-line);
+}
+@utility shadow-hard-lg {
+  box-shadow: 6px 6px 0 0 var(--pv-line);
+}
+@utility shadow-hard-ai {
+  box-shadow: 4px 4px 0 0 var(--pv-ai);
+}
+
+/* Efecto de "presionar el papel": sube al pasar el cursor y se hunde al hacer clic. */
+@utility press {
+  transition:
+    transform 120ms ease,
+    box-shadow 120ms ease;
+  &:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 5px 5px 0 0 var(--pv-line);
+  }
+  &:active {
+    transform: translate(4px, 4px);
+    box-shadow: 0 0 0 0 var(--pv-line);
+  }
+}
+
+/* Trama de puntos tipo semitono para fondos de sección. */
+@utility halftone {
+  background-image: radial-gradient(var(--pv-dot) 1px, transparent 1px);
+  background-size: 16px 16px;
+}
+
+/* Recorrido de lectura del ejemplo de la portada: cada viñeta se ilumina en orden. */
+@keyframes pv-panel-focus {
+  0%,
+  16% {
+    fill-opacity: 0.22;
+  }
+  20%,
+  100% {
+    fill-opacity: 0;
+  }
+}
+
+@layer base {
+  html {
+    background-color: var(--pv-paper);
+  }
+
+  body {
+    background-color: var(--pv-paper);
+    color: var(--pv-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  :focus-visible {
+    outline: 3px solid var(--pv-accent);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background-color: var(--pv-highlight);
+    color: var(--pv-on-highlight);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
