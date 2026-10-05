@@ -94,8 +94,9 @@ export async function forwardToBackend(request: NextRequest, segments: string[])
     clearSessionCookies(reply.cookies, serverConfig().secureCookies);
   }
   if (response.ok && segments[0] === "curation" && !SAFE_METHODS.has(method)) {
-    // Un cambio de curaduría vuelve obsoleto el catálogo público cacheado.
-    revalidateTag(CATALOG_TAG, "max");
+    // Un cambio de curaduría vuelve obsoleto el catálogo público cacheado. Con expire: 0 la
+    // siguiente visita ya ve el cambio (no se sirve la versión vieja mientras se regenera).
+    revalidateTag(CATALOG_TAG, { expire: 0 });
   }
   return reply;
 }
