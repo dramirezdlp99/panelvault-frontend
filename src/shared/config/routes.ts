@@ -11,8 +11,9 @@ export const routes = {
   twoFactor: "/ingresar/verificacion",
   register: "/registro",
   library: "/biblioteca",
-  comic: (id: string) => `/biblioteca/${encodeURIComponent(id)}`,
-  reader: (id: string) => `/lector/${encodeURIComponent(id)}`,
+  // Detalle y lector llevan el id en la query: la página es una sola "cáscara" que funciona sin conexión.
+  comic: (id: string) => `/biblioteca/detalle?id=${encodeURIComponent(id)}`,
+  reader: (id: string, page?: number) => `/lector?id=${encodeURIComponent(id)}${page ? `&pagina=${page}` : ""}`,
   reading: "/leyendo",
   bookmarks: "/marcadores",
   analysis: "/analisis",
