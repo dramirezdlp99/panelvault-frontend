@@ -141,7 +141,15 @@ describe("session", () => {
     expect(await reply.json()).toEqual({ user: { id: "u", name: "Ana", role: "LECTOR" } });
   });
 
-  it("responde 401 sin sesion", () => {
-    expect(session(new NextRequest("http://app.test/api/auth/session")).status).toBe(401);
+  it("sin sesion responde user null (un visitante no es un error)", async () => {
+    const reply = session(new NextRequest("http://app.test/api/auth/session"));
+    expect(reply.status).toBe(200);
+    expect(await reply.json()).toEqual({ user: null });
+  });
+
+  it("ignora un perfil si ya no hay token de renovacion", async () => {
+    const profile = encodeProfile({ id: "u", name: "Ana", role: "LECTOR" });
+    const reply = session(new NextRequest("http://app.test/api/auth/session", { headers: { cookie: `pv_profile=${profile}` } }));
+    expect(await reply.json()).toEqual({ user: null });
   });
 });
