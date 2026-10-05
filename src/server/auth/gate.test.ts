@@ -16,7 +16,7 @@ describe("classifyPath", () => {
     ["/curaduria", "curator-page"],
     ["/curaduria/nueva", "curator-page"],
     ["/api/pv/library/comics", "api"],
-    ["/api/auth/session", "api"],
+    ["/api/auth/session", "public"],
     ["/api/auth/login", "public"],
   ])("%s es %s", (path, kind) => {
     expect(classifyPath(path)).toBe(kind);
