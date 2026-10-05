@@ -14,26 +14,26 @@ export const CATALOG_PAGE_SIZE = 12;
 
 export type Loaded<T> = { kind: "ok"; data: T } | { kind: "not-found" } | { kind: "unavailable" };
 
-class CatalogUnavailable extends Error {}
-
-async function getJson<T>(path: string): Promise<T | null> {
+/** Lee del backend sin lanzar: un backend caído es un resultado más ("no disponible"). */
+async function getJson<T>(path: string): Promise<Loaded<T>> {
   let response: Response;
   try {
     response = await backendFetch({ path });
   } catch (error) {
-    if (error instanceof BackendUnavailableError) throw new CatalogUnavailable();
+    if (error instanceof BackendUnavailableError) return { kind: "unavailable" };
     throw error;
   }
-  if (response.status === 404) return null;
-  if (!response.ok) throw new CatalogUnavailable();
-  return (await response.json()) as T;
+  if (response.status === 404) return { kind: "not-found" };
+  if (!response.ok) return { kind: "unavailable" };
+  return { kind: "ok", data: (await response.json()) as T };
 }
 
 /*
  * Lecturas públicas cacheadas en el servidor de Next (caché de datos con etiqueta "catalog").
  * Cada petición al backend va firmada con una marca de tiempo distinta, por eso la caché
  * se aplica sobre el resultado (unstable_cache) y no sobre fetch.
- * Los errores no se cachean: se lanzan y se convierten en "no disponible" afuera.
+ * Si el backend no responde, "no disponible" también se guarda, pero solo hasta la siguiente
+ * revalidación (60 s): así el servidor no lo bombardea mientras se recupera.
  */
 const cachedWorks = unstable_cache(
   async (query: string, page: number) => {
@@ -57,26 +57,16 @@ const cachedSlugs = unstable_cache(
   { revalidate: CATALOG_REVALIDATE_SECONDS, tags: [CATALOG_TAG] },
 );
 
-async function load<T>(read: () => Promise<T | null>): Promise<Loaded<T>> {
-  try {
-    const data = await read();
-    return data === null ? { kind: "not-found" } : { kind: "ok", data };
-  } catch (error) {
-    if (error instanceof CatalogUnavailable) return { kind: "unavailable" };
-    throw error;
-  }
-}
-
 export function loadWorks(query: string, page: number): Promise<Loaded<Page<Work>>> {
-  return load(() => cachedWorks(query.trim().slice(0, 100), Math.max(0, Math.floor(page))));
+  return cachedWorks(query.trim().slice(0, 100), Math.max(0, Math.floor(page)));
 }
 
 export function loadWork(slug: string): Promise<Loaded<Work>> {
-  return load(() => cachedWork(slug));
+  return cachedWork(slug);
 }
 
 /** Slugs para pregenerar fichas en la compilación; sin backend se compila igual (lista vacía). */
 export async function loadPublishedSlugs(): Promise<string[]> {
-  const result = await load(() => cachedSlugs());
+  const result = await cachedSlugs();
   return result.kind === "ok" ? result.data : [];
 }
