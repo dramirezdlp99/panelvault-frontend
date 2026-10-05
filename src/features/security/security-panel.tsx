@@ -7,6 +7,7 @@ import { useCallback, useEffect, useState } from "react";
 import { logout } from "@/features/auth/api";
 import { errorMessage } from "@/shared/api/http";
 import { routes } from "@/shared/config/routes";
+import { clearOfflinePages } from "@/shared/offline/service-worker";
 import { Alert } from "@/shared/ui/alert";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
@@ -57,6 +58,7 @@ export function SecurityPanel() {
 
   async function signOut() {
     await logout().catch(() => null);
+    clearOfflinePages();
     router.replace(routes.home);
     router.refresh();
   }
