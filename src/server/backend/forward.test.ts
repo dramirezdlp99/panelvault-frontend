@@ -92,7 +92,7 @@ describe("forwardToBackend", () => {
   it("invalida el catalogo cacheado tras un cambio de curaduria", async () => {
     fetchMock.mockResolvedValue(jsonResponse({ id: "w" }));
     await forwardToBackend(req("/api/pv/curation/works/w/publish", { method: "POST" }), ["curation", "works", "w", "publish"]);
-    expect(revalidateTag).toHaveBeenCalledWith("catalog", "max");
+    expect(revalidateTag).toHaveBeenCalledWith("catalog", { expire: 0 });
   });
 
   it("no invalida el catalogo en lecturas de curaduria", async () => {
