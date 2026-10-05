@@ -13,7 +13,7 @@ export function useSessionProbe(): SessionUser | null {
   useEffect(() => {
     const controller = new AbortController();
     fetch("/api/auth/session", { signal: controller.signal, credentials: "same-origin" })
-      .then((r) => (r.ok ? (r.json() as Promise<{ user: SessionUser }>) : null))
+      .then((r) => (r.ok ? (r.json() as Promise<{ user: SessionUser | null }>) : null))
       .then((data) => setUser(data?.user ?? null))
       .catch(() => setUser(null));
     return () => controller.abort();
