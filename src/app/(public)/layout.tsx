@@ -1,5 +1,6 @@
 import { PublicFooter } from "@/shared/layout/public-footer";
 import { PublicHeader } from "@/shared/layout/public-header";
+import { ServiceWorkerRegistration } from "@/shared/offline/service-worker";
 
 /** Estructura de las páginas públicas (portada, catálogo, ingreso): barra superior y pie. */
 export default function PublicLayout({ children }: LayoutProps<"/">) {
@@ -10,6 +11,7 @@ export default function PublicLayout({ children }: LayoutProps<"/">) {
         {children}
       </main>
       <PublicFooter />
+      <ServiceWorkerRegistration />
     </div>
   );
 }
