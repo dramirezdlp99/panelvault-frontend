@@ -14,10 +14,23 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  // En Docker (NEXT_OUTPUT=standalone) se genera un servidor autónomo y liviano;
+  // en local se usa el modo normal para que "npm start" funcione sin avisos.
+  output: process.env.NEXT_OUTPUT === "standalone" ? "standalone" : undefined,
   // No anunciar la tecnologia del servidor en cada respuesta.
   poweredByHeader: false,
   async headers() {
-    return [{ source: "/:path*", headers: securityHeaders }];
+    return [
+      { source: "/:path*", headers: securityHeaders },
+      {
+        // El service worker siempre se revalida, para que una nueva versión llegue de inmediato.
+        source: "/sw.js",
+        headers: [
+          { key: "Cache-Control", value: "no-cache, no-store, must-revalidate" },
+          { key: "Service-Worker-Allowed", value: "/" },
+        ],
+      },
+    ];
   },
 };
 
