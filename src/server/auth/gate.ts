@@ -16,7 +16,7 @@ export const PROTECTED_PAGE_PREFIXES = [
 
 export const CURATOR_PAGE_PREFIXES = ["/curaduria"] as const;
 
-export const API_PREFIXES = ["/api/pv", "/api/auth/session"] as const;
+export const API_PREFIXES = ["/api/pv"] as const;
 
 function matchesPrefix(pathname: string, prefix: string): boolean {
   return pathname === prefix || pathname.startsWith(`${prefix}/`);
