@@ -4,6 +4,7 @@ import { Menu, X } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
+import { useSessionProbe } from "@/shared/auth/use-session-probe";
 import { routes } from "@/shared/config/routes";
 import { cn } from "@/shared/lib/cn";
 import { ThemeToggle } from "@/shared/theme/theme-toggle";
@@ -20,6 +21,7 @@ export const publicNavLinks = [
 export function PublicHeader() {
   const [open, setOpen] = useState(false);
   const close = () => setOpen(false);
+  const user = useSessionProbe();
 
   return (
     <header className="sticky top-0 z-40 border-b-[3px] border-line bg-paper/95 backdrop-blur">
@@ -40,12 +42,20 @@ export function PublicHeader() {
 
         <div className="hidden items-center gap-3 md:flex">
           <ThemeToggle />
-          <ButtonLink href={routes.login} variant="secondary" size="sm">
-            Iniciar sesión
-          </ButtonLink>
-          <ButtonLink href={routes.register} size="sm">
-            Crear cuenta
-          </ButtonLink>
+          {user ? (
+            <ButtonLink href={routes.library} size="sm">
+              Mi biblioteca
+            </ButtonLink>
+          ) : (
+            <>
+              <ButtonLink href={routes.login} variant="secondary" size="sm">
+                Iniciar sesión
+              </ButtonLink>
+              <ButtonLink href={routes.register} size="sm">
+                Crear cuenta
+              </ButtonLink>
+            </>
+          )}
         </div>
 
         <div className="flex items-center gap-2 md:hidden">
@@ -72,14 +82,20 @@ export function PublicHeader() {
               </Link>
             ))}
           </nav>
-          <div className="grid grid-cols-2 gap-3">
-            <ButtonLink href={routes.login} variant="secondary" size="sm" onClick={close}>
-              Iniciar sesión
+          {user ? (
+            <ButtonLink href={routes.library} size="sm" onClick={close}>
+              Mi biblioteca
             </ButtonLink>
-            <ButtonLink href={routes.register} size="sm" onClick={close}>
-              Crear cuenta
-            </ButtonLink>
-          </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-3">
+              <ButtonLink href={routes.login} variant="secondary" size="sm" onClick={close}>
+                Iniciar sesión
+              </ButtonLink>
+              <ButtonLink href={routes.register} size="sm" onClick={close}>
+                Crear cuenta
+              </ButtonLink>
+            </div>
+          )}
         </Container>
       </div>
     </header>
