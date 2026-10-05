@@ -8,6 +8,7 @@ import { useEffect, useRef, useState } from "react";
 import { logout } from "@/features/auth/api";
 import { ROLE_LABELS, type SessionUser } from "@/shared/auth/roles";
 import { routes } from "@/shared/config/routes";
+import { clearOfflinePages } from "@/shared/offline/service-worker";
 
 function initials(name: string): string {
   return name
@@ -42,6 +43,7 @@ export function UserMenu({ user }: { user: SessionUser }) {
   async function signOut() {
     setLeaving(true);
     await logout().catch(() => null);
+    clearOfflinePages();
     router.replace(routes.home);
     router.refresh();
   }
