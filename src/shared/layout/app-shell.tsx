@@ -7,6 +7,7 @@ import { useEffect, type FormEvent, type ReactNode } from "react";
 
 import { SESSION_EXPIRED_EVENT } from "@/shared/api/http";
 import { hasRole, type SessionUser } from "@/shared/auth/roles";
+import { LocalStoreProvider } from "@/shared/offline/local-store";
 import { routes } from "@/shared/config/routes";
 import { cn } from "@/shared/lib/cn";
 import { ThemeToggle } from "@/shared/theme/theme-toggle";
@@ -91,7 +92,7 @@ export function AppShell({ user, children }: { user: SessionUser; children: Reac
         </header>
 
         <main id="contenido" className="halftone flex-1 px-4 py-8 sm:px-6 lg:px-10">
-          {children}
+          <LocalStoreProvider userId={user.id}>{children}</LocalStoreProvider>
         </main>
       </div>
 
