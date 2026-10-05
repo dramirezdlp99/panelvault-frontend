@@ -1,0 +1,36 @@
+# Dependencias
+/node_modules
+
+# Pruebas
+/coverage
+
+# Next.js
+/.next/
+/out/
+/build
+
+# Variables de entorno: nunca se suben (solo la plantilla .env.example)
+.env*
+!.env.example
+
+# Sistema operativo y editores
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Depuracion
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Vercel
+.vercel
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# Certificados
+*.pem
