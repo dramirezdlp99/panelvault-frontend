@@ -143,14 +143,15 @@ export async function logout(request: NextRequest): Promise<NextResponse> {
   return reply;
 }
 
-/** GET /api/auth/session: quién está conectado, para que la interfaz se pinte. */
+/**
+ * GET /api/auth/session: quién está conectado, para que el encabezado público se pinte.
+ * Sin sesión responde { user: null } (no es un error: es la respuesta normal de un visitante).
+ */
 export function session(request: NextRequest): NextResponse {
-  const user =
-    decodeProfile(request.cookies.get(PROFILE_COOKIE)?.value) ??
-    readClaims(request.cookies.get(ACCESS_COOKIE)?.value)?.user ??
-    null;
-  if (!user || !request.cookies.get(REFRESH_COOKIE)) {
-    return errorResponse({ status: 401, code: "auth.unauthenticated", message: "No hay una sesión activa." });
-  }
+  const user = request.cookies.get(REFRESH_COOKIE)
+    ? (decodeProfile(request.cookies.get(PROFILE_COOKIE)?.value) ??
+      readClaims(request.cookies.get(ACCESS_COOKIE)?.value)?.user ??
+      null)
+    : null;
   return NextResponse.json({ user }, { headers: NO_STORE });
 }
