@@ -17,6 +17,5 @@ export const config = {
     "/seguridad/:path*",
     "/curaduria/:path*",
     "/api/pv/:path*",
-    "/api/auth/session",
   ],
 };
