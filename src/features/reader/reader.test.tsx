@@ -65,7 +65,7 @@ describe("Reader", () => {
     const mark = screen.getByRole("button", { name: "Marcar esta página" });
     await vi.waitFor(() => expect(mark).toBeEnabled());
     await user.click(mark);
-    expect(await screen.findByText("Página 2 guardada en tus marcadores.")).toBeInTheDocument();
+    expect(await screen.findByText("Página 2 guardada en tus marcadores. Puedes añadirle una nota desde Marcadores.")).toBeInTheDocument();
     const db = await openLocalDb(userId);
     // El progreso se guarda tras una breve espera (600 ms) para no escribir en cada clic.
     await vi.waitFor(async () => expect((await db.get("progress", comic.id))?.currentPage).toBe(2), { timeout: 3000 });
