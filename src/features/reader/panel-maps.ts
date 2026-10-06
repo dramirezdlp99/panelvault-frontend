@@ -2,6 +2,7 @@ import { ApiRequestError, api } from "@/shared/api/http";
 import type { LocalDb } from "@/shared/offline/db";
 
 import type { NormalizedBox } from "./panel-viewport";
+import { prepareForUpload } from "./prepare-upload";
 
 export type Preset = "western" | "manga";
 export type DetectedPanel = { order: number; confidence: number; bbox: NormalizedBox };
@@ -55,10 +56,12 @@ export type AnalysisApi = {
 export const defaultAnalysisApi: AnalysisApi = {
   getResult: (sha, preset) => api(`/analysis/results/${sha}?preset=${preset}`),
   async submit(blob, preset) {
+    // Una página muy pesada se reduce antes de subirla (límite por petición de Vercel).
+    const upload = await prepareForUpload(blob);
     const response = await fetch(`/api/pv/analysis/pages?preset=${preset}`, {
       method: "POST",
-      body: blob,
-      headers: { "Content-Type": blob.type || "application/octet-stream" },
+      body: upload,
+      headers: { "Content-Type": upload.type || "application/octet-stream" },
       credentials: "same-origin",
     });
     const body: unknown = await response.json().catch(() => null);
