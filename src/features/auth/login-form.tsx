@@ -12,6 +12,7 @@ import { Button } from "@/shared/ui/button";
 import { Field } from "@/shared/ui/field";
 import { Input } from "@/shared/ui/input";
 import { PasswordInput } from "@/shared/ui/password-input";
+import { SlowNotice } from "@/shared/ui/slow-notice";
 import { Spinner } from "@/shared/ui/spinner";
 
 import { login } from "./api";
@@ -88,6 +89,7 @@ export function LoginForm({ next }: { next?: string }) {
         {pending ? <Spinner label="Ingresando" /> : <LogIn aria-hidden className="size-5" />}
         Entrar
       </Button>
+      <SlowNotice active={pending} />
 
       <p className="border-t-2 border-dashed border-line/20 pt-5 text-center text-ink-muted">
         ¿No tienes cuenta?{" "}
