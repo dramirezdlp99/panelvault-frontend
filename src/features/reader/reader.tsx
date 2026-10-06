@@ -211,13 +211,13 @@ export function Reader({ comic, pages, savedProgress, startPage }: ReaderProps) 
     } else {
       const bookmark: LocalBookmark = { id: crypto.randomUUID(), comicId: comic.id, page: state.page, note: null, createdAt: new Date().toISOString() };
       await saveBookmark(db, bookmark);
-      setToast({ text: `Página ${state.page} guardada en tus marcadores.` });
+      setToast({ text: `Página ${state.page} guardada en tus marcadores. Puedes añadirle una nota desde Marcadores.` });
     }
   }, [db, pageBookmark, comic.id, state.page]);
 
   useEffect(() => {
     if (!toast || toast.page) return;
-    const timer = window.setTimeout(() => setToast(null), 2500);
+    const timer = window.setTimeout(() => setToast(null), 4000);
     return () => window.clearTimeout(timer);
   }, [toast]);
 
