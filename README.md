@@ -153,9 +153,25 @@ La imagen usa el modo `standalone` de Next (solo el servidor compilado) y corre 
 
 ## Despliegue
 
-Pensado para planes gratuitos: el frontend en **Vercel** o **Render** (con el `Dockerfile`),
-el backend y el motor de IA en Render y la base de datos en Neon. Configura las variables de
-entorno de la tabla en la plataforma; ningún secreto va en el repositorio.
+Todo en planes gratuitos:
+
+| Pieza | Plataforma | Notas |
+|---|---|---|
+| Frontend | **Vercel** | Detecta Next.js solo; región `iad1` (Washington) |
+| Backend | **Render** (Docker) | Región Virginia; se duerme tras 15 min sin uso |
+| Motor de IA | **Render** (Docker) | El backend lo despierta con `/health` antes de analizar |
+| Base de datos | **Neon** (PostgreSQL) | Región AWS us-east-1, cerca de Render y Vercel |
+
+Adaptaciones para los planes gratuitos:
+
+- **Arranque en frío:** el servidor de Next espera hasta 2 minutos al backend, la portada lo
+  "despierta" en segundo plano (`/api/health`) y los formularios de ingreso avisan si tarda.
+- **Límite de 4,5 MB por petición de Vercel:** una página más pesada se reduce en el navegador
+  (lado mayor de 2400 px, JPEG) antes de enviarla a analizar. Las viñetas vuelven en coordenadas
+  relativas, así que valen igual para la imagen original.
+
+Variables en Vercel: `PANELVAULT_API_URL` (URL del backend en Render), `PANELVAULT_GATEWAY_SECRET`
+(el mismo del backend) y `NEXT_PUBLIC_SITE_URL` (la URL de Vercel). Ningún secreto va en el repositorio.
 
 ## Integración continua
 
