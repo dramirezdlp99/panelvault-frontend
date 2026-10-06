@@ -12,6 +12,7 @@ import { Button } from "@/shared/ui/button";
 import { Field } from "@/shared/ui/field";
 import { Input } from "@/shared/ui/input";
 import { PasswordInput } from "@/shared/ui/password-input";
+import { SlowNotice } from "@/shared/ui/slow-notice";
 import { Spinner } from "@/shared/ui/spinner";
 
 import { login, register } from "./api";
@@ -104,6 +105,7 @@ export function RegisterForm() {
         {pending ? <Spinner label="Creando cuenta" /> : <UserPlus aria-hidden className="size-5" />}
         Crear cuenta
       </Button>
+      <SlowNotice active={pending} />
 
       <p className="border-t-2 border-dashed border-line/20 pt-5 text-center text-ink-muted">
         ¿Ya tienes cuenta?{" "}
