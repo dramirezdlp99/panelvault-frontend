@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 
 import { site } from "@/shared/config/site";
 import { fontVariables } from "@/shared/fonts/fonts";
+import { WarmUp } from "@/shared/offline/warm-up";
 import { ThemeScript } from "@/shared/theme/theme-script";
 
 import "./globals.css";
@@ -35,6 +36,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           Saltar al contenido
         </a>
         {children}
+        <WarmUp />
       </body>
     </html>
   );
