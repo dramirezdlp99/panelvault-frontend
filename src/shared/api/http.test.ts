@@ -80,4 +80,9 @@ describe("errorMessage", () => {
     expect(errorMessage(new NetworkError())).toMatch(/Sin conexión/);
     expect(errorMessage(new Error("x"))).toBe("Ocurrió un error inesperado.");
   });
+
+  it("muestra el mensaje de una pagina demasiado pesada", async () => {
+    const { UploadTooLargeError } = await import("@/features/reader/prepare-upload");
+    expect(errorMessage(new UploadTooLargeError())).toMatch(/demasiado pesada/);
+  });
 });
