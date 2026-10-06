@@ -9,7 +9,7 @@ type FieldProps = {
   error?: string | null;
   /** Elemento junto a la etiqueta (por ejemplo, un enlace). */
   aside?: ReactNode;
-  children: ReactElement<{ id?: string; "aria-describedby"?: string; invalid?: boolean }>;
+  children: ReactElement<{ id?: string; "aria-describedby"?: string; invalid?: boolean; "aria-invalid"?: boolean }>;
 };
 
 /** Etiqueta + control + ayuda/error, conectados por id para lectores de pantalla. */
@@ -19,8 +19,16 @@ export function Field({ label, hint, error, aside, children }: FieldProps) {
   const errorId = `${id}-error`;
   const describedBy = [hint ? hintId : null, error ? errorId : null].filter(Boolean).join(" ") || undefined;
 
+  // Los componentes propios (Input, TagInput...) reciben "invalid"; un elemento nativo
+  // como <select> no conoce esa prop, así que recibe directamente "aria-invalid".
+  const isNative = isValidElement(children) && typeof children.type === "string";
   const control = isValidElement(children)
-    ? cloneElement(children, { id, "aria-describedby": describedBy, invalid: Boolean(error) })
+    ? cloneElement(
+        children,
+        isNative
+          ? { id, "aria-describedby": describedBy, "aria-invalid": error ? true : undefined }
+          : { id, "aria-describedby": describedBy, invalid: Boolean(error) },
+      )
     : children;
 
   return (
