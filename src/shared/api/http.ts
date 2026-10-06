@@ -104,5 +104,7 @@ export function errorMessage(error: unknown): string {
     return friendlyMessages[error.code] ?? error.message;
   }
   if (error instanceof NetworkError) return "Sin conexión con el servidor. Revisa tu internet e intenta de nuevo.";
+  // Errores propios de la app con un mensaje ya pensado para la persona (p. ej. imagen demasiado pesada).
+  if (error instanceof Error && error.name === "UploadTooLargeError") return error.message;
   return "Ocurrió un error inesperado.";
 }
