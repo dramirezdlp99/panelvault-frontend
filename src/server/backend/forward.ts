@@ -71,7 +71,6 @@ export async function forwardToBackend(request: NextRequest, segments: string[])
       body,
       contentType: request.headers.get("content-type") ?? undefined,
       accessToken: request.cookies.get(ACCESS_COOKIE)?.value,
-      timeoutMs: segments[0] === "analysis" ? 60_000 : 20_000,
     });
   } catch (error) {
     if (error instanceof BackendUnavailableError) return unavailableResponse();
