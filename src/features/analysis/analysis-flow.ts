@@ -7,6 +7,7 @@ import {
   type AnalysisPayload,
   type Preset,
 } from "@/features/reader/panel-maps";
+import { prepareForUpload } from "@/features/reader/prepare-upload";
 
 /** Límite del backend para imágenes de análisis. */
 export const MAX_ANALYSIS_BYTES = 10 * 1024 * 1024;
@@ -41,10 +42,13 @@ export async function runAnalysis(
   options: { pollMs?: number; maxPolls?: number } = {},
 ): Promise<AnalysisOutcome> {
   validateImage(file);
-  const sha256 = await sha256Hex(await file.arrayBuffer());
+  // Se calcula la huella de lo que realmente se sube (puede ser la versión reducida),
+  // para que coincida con la que guarda el backend.
+  const upload = await prepareForUpload(file);
+  const sha256 = await sha256Hex(await upload.arrayBuffer());
 
   onUpdate({ step: "uploading" });
-  const submitted = await client.submit(file, preset);
+  const submitted = await client.submit(upload, preset);
   if (submitted.status === 200 && "result" in submitted.body) {
     onUpdate({ step: "SUCCEEDED" });
     return { kind: "done", payload: submitted.body.result as AnalysisPayload, sha256, cached: true };
