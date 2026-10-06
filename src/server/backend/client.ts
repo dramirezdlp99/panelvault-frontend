@@ -24,6 +24,12 @@ export class BackendUnavailableError extends Error {
   }
 }
 
+/**
+ * En el plan gratuito de Render el backend se duerme tras 15 minutos sin uso y tarda
+ * cerca de un minuto en despertar. Se espera hasta 2 minutos antes de rendirse.
+ */
+export const BACKEND_TIMEOUT_MS = 120_000;
+
 const EMPTY = new Uint8Array(0);
 const encoder = new TextEncoder();
 
@@ -61,7 +67,7 @@ export async function backendFetch(request: BackendRequest, config: ServerConfig
       method,
       headers,
       body: body.length > 0 ? (body as BodyInit) : undefined,
-      signal: AbortSignal.timeout(request.timeoutMs ?? 20_000),
+      signal: AbortSignal.timeout(request.timeoutMs ?? BACKEND_TIMEOUT_MS),
       redirect: "manual",
       // Cada petición lleva una firma distinta: la caché, cuando hace falta, se maneja arriba (unstable_cache).
       cache: "no-store",
