@@ -1,115 +1,281 @@
-# PanelVault Frontend
+# 🎨 PanelVault · Frontend
 
-Interfaz web de **PanelVault**, una biblioteca de cómics *offline-first* con lectura guiada
-viñeta por viñeta. Habla con el backend de Spring Boot (`panelvault-backend`), que a su vez
-usa el motor de visión por computador (`panelvault-ai-engine`).
+> **Tu biblioteca de cómics, viñeta por viñeta.** Interfaz web de PanelVault: importa tus cómics (CBZ, PDF o imágenes), léelos **con o sin internet** y deja que la IA te guíe **cuadro por cuadro**, en orden occidental o manga.
 
-```
-Navegador ──► Next.js (este repo) ──HMAC──► Backend Spring Boot ──HMAC──► Motor de IA
-   │            │  BFF: cookies httpOnly         │  PostgreSQL
-   │            └─ renderizado SSG / ISR / SSR    └─ cola de análisis
-   └─ IndexedDB (cómics, progreso, marcadores) + service worker (sin conexión)
-```
+🌐 **Demo en vivo:** <https://panelvault-frontend.vercel.app>
 
-## Tecnologías
+![Next.js](https://img.shields.io/badge/Next.js-16-000000?logo=nextdotjs&logoColor=white)
+![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)
+![TypeScript](https://img.shields.io/badge/TypeScript-estricto-3178C6?logo=typescript&logoColor=white)
+![Tailwind](https://img.shields.io/badge/Tailwind%20CSS-4-06B6D4?logo=tailwindcss&logoColor=white)
+![PWA](https://img.shields.io/badge/offline--first-Service%20Worker-5A0FC8?logo=pwa&logoColor=white)
+![Tests](https://img.shields.io/badge/tests-393%20en%20verde-2ea44f)
+![Vercel](https://img.shields.io/badge/deploy-Vercel-000000?logo=vercel&logoColor=white)
+![Costo](https://img.shields.io/badge/costo-100%25%20gratuito-success)
 
-- **Next.js 16** (App Router) + **React 19** + **TypeScript** estricto
-- **Tailwind CSS 4** con un sistema de diseño propio ("cómic editorial")
-- **IndexedDB** (`idb`) para la biblioteca local, **fflate** para CBZ y **pdf.js** para PDF
-- **Vitest** + **Testing Library** + `fake-indexeddb` para pruebas
-- Fuentes autoalojadas e íconos `lucide-react`
+| | |
+|---|---|
+| 👨‍💻 **Desarrollado por** | David Fernando Ramírez de la Parra |
+| 👨‍🏫 **Profesor** | Jhonatan Andrés Mideros Narváez |
+| 📚 **Asignatura** | Programación Orientada a la Web |
+| 🏛️ **Institución** | Universidad Cooperativa de Colombia |
 
-Todo es gratuito y de código abierto.
+---
 
-## Funcionalidades
+## 📑 Contenido
+
+1. [El caso de estudio](#-el-caso-de-estudio)
+2. [Funcionalidades](#-funcionalidades)
+3. [Stack](#-stack)
+4. [Cumplimiento del caso de estudio](#-cumplimiento-del-caso-de-estudio)
+5. [Los 5 patrones de renderizado](#-los-5-patrones-de-renderizado)
+6. [Fundamentos del navegador aplicados](#-fundamentos-del-navegador-aplicados)
+7. [Arquitectura de 7 capas](#-arquitectura-de-7-capas)
+8. [Estructura del código](#-estructura-del-código)
+9. [Seguridad](#-seguridad)
+10. [Offline-first](#-offline-first)
+11. [Sistema de diseño](#-sistema-de-diseño)
+12. [Ejecutar en local](#-ejecutar-en-local)
+13. [Variables de entorno](#-variables-de-entorno)
+14. [Pruebas y calidad](#-pruebas-y-calidad)
+15. [Despliegue](#-despliegue)
+16. [Estado y próximos pasos](#-estado-y-próximos-pasos)
+
+---
+
+## 📖 El caso de estudio
+
+**Caso de estudio 1: Gestor de Cómics Digitales Offline-First con Análisis Visual Inteligente.**
+
+Plataforma web de alto rendimiento para la **lectura, organización y gestión de cómics digitales** y novelas gráficas. El usuario carga sus colecciones arrastrando y soltando; el despaquetado de las páginas ocurre **fuera del hilo de la interfaz** para evitar congelamientos, y la lectura es fluida **tanto en línea como totalmente fuera de línea**.
+
+La **IA es co-protagonista**: un sistema de visión por computador en el servidor detecta los bordes de cada viñeta y su orden de lectura, y el visor lo usa para hacer **zoom automático viñeta por viñeta**.
+
+PanelVault está dividido en **tres repositorios independientes**:
+
+| Repositorio | Rol |
+|---|---|
+| 🎨 **`panelvault-frontend`** (este) | Interfaz web, BFF, offline-first |
+| ⚙️ [`panelvault-backend`](https://github.com/dramirezdlp99/panelvault-backend) | API, seguridad, cola de análisis y datos (Spring Boot) |
+| 🧠 [`panelvault-ai-engine`](https://github.com/dramirezdlp99/panelvault-ai-engine) | Visión por computador (Python + OpenCV) |
+
+---
+
+## ✨ Funcionalidades
 
 | Pantalla | Qué hace |
 |---|---|
-| Portada | Presentación del proyecto y clásicos de dominio público |
-| Catálogo | Obras públicas con búsqueda y paginación; ficha de cada obra |
-| Ingreso / registro | Cuenta nueva, inicio de sesión y verificación en dos pasos (TOTP o código de recuperación) |
-| Biblioteca | Importa CBZ, PDF o imágenes; todo se guarda en el dispositivo; filtros, búsqueda y estadísticas |
-| Detalle del cómic | Datos, edición, marcadores y borrado |
-| Lector | Página completa o viñeta por viñeta (con el mapa de viñetas del motor de IA), occidental o manga, teclado y gestos, marcadores |
-| Leyendo | Lecturas recientes, con el progreso de todos tus dispositivos |
-| Marcadores | Todas las páginas marcadas, con notas editables |
-| Análisis | Sube una página y ve las viñetas detectadas, su confianza y el tiempo por etapa |
-| Curaduría | (rol CURADOR) Crear, editar, publicar y borrar obras del catálogo |
-| Seguridad | Activar la verificación en dos pasos con QR y códigos de recuperación |
+| 🏠 **Portada** | Presentación del proyecto y clásicos de dominio público |
+| 🗂️ **Catálogo** | Obras públicas con búsqueda y paginación; ficha de cada obra |
+| 🔐 **Ingreso / registro** | Cuenta nueva, inicio de sesión y verificación en dos pasos (código TOTP o de recuperación) |
+| 📚 **Biblioteca** | Importa CBZ, PDF o imágenes arrastrando y soltando; todo se guarda en el dispositivo; filtros, búsqueda y estadísticas |
+| 📘 **Detalle del cómic** | Datos, edición, dirección de lectura, marcadores y borrado |
+| 👁️ **Lector** | Página completa o **viñeta por viñeta** con el mapa de la IA; occidental o manga; teclado y gestos; contornos de viñetas; marcadores |
+| ⏱️ **Leyendo** | Lecturas recientes con el progreso de todos tus dispositivos |
+| 🔖 **Marcadores** | Todas las páginas marcadas, con notas editables |
+| 🔬 **Análisis** | Sube una página y ve las viñetas detectadas, su confianza y el tiempo de cada etapa de la IA |
+| 🛠️ **Curaduría** | (rol CURADOR) Crear, editar, publicar y borrar obras del catálogo |
+| 🛡️ **Seguridad** | Activar la 2FA con código QR y códigos de recuperación |
 
-## Patrones de renderizado
+---
 
-| Patrón | Dónde | Por qué |
+## 🧰 Stack
+
+| | Tecnología | Para qué |
 |---|---|---|
-| **SSG** (estático) | Portada, 404, sin permiso | No dependen de datos ni del usuario |
-| **ISR** (regeneración incremental) | `/catalogo/[slug]` | Se generan al compilar y se regeneran cada 60 s o al instante tras un cambio de curaduría (`revalidateTag`) |
-| **SSR + streaming** | `/catalogo` | Depende de la búsqueda; el encabezado sale de inmediato y los resultados llegan con `Suspense` |
-| **SSR dinámico** | Ingreso, registro, layout privado | Leen las cookies de sesión en cada petición |
-| **CSR** (cliente) | Biblioteca, lector, Leyendo, Marcadores, Análisis | Los datos viven en IndexedDB del dispositivo; funcionan sin conexión |
+| ▲ | **Next.js 16** (App Router) | Los 5 patrones de renderizado y el BFF |
+| ⚛️ | **React 19** + **TypeScript** estricto | Componentes y tipos |
+| 🎨 | **Tailwind CSS 4** | Sistema de diseño propio ("cómic editorial") |
+| 🗄️ | **IndexedDB** (`idb`) | Biblioteca local: cómics, páginas, progreso, marcadores |
+| 📦 | **fflate** | Descomprimir CBZ (ZIP) **en segundo plano** |
+| 📄 | **pdf.js** | Convertir cada página de un PDF en imagen, **en su propio worker** |
+| 📱 | **qrcode** | Generar el QR de la 2FA en el navegador |
+| 🧪 | **Vitest**, **Testing Library**, `fake-indexeddb` | Pruebas automáticas |
+| 🔣 | Fuentes autoalojadas e íconos `lucide-react` | Sin dependencias de terceros en tiempo de ejecución |
 
-## Arquitectura
+Todo es gratuito y de código abierto.
+
+---
+
+## ✅ Cumplimiento del caso de estudio
+
+**Sección 1.2 · Arquitectura de navegador, rendimiento e interacción**
+
+| Requisito | Estado | Cómo se cumple |
+|---|---|---|
+| ⚡ **Respuesta de interfaz garantizada** | ✅ | La descompresión del CBZ (fflate asíncrono) y el renderizado de PDF (pdf.js) corren en **workers**, fuera del hilo principal. El zoom del lector usa `transform` de CSS, que anima la GPU sin recalcular el *layout* |
+| 🗜️ **Procesamiento de archivos en segundo plano** | 🟡 Parcial | La descompresión ocurre en segundo plano y cada página se guarda por separado en IndexedDB; el visor las carga una a una desde ahí. Falta la entrega **progresiva** mientras todavía se descomprime |
+| 📴 **Persistencia y offline-first** | ✅ | El **service worker** intercepta las peticiones y guarda las pantallas; los cómics viven en **IndexedDB**. Sin red, la app abre y deja leer |
+| 🪟 **Sincronización multi-pestaña** | 🟡 Parcial | Todas las pestañas comparten la misma base local y el progreso se sincroniza entre **dispositivos** vía backend. Falta el aviso **en vivo** entre pestañas abiertas (BroadcastChannel o Shared Worker) |
+
+**Sección 1.3 · Inteligencia artificial**
+
+| Requisito | Estado | Cómo se cumple |
+|---|---|---|
+| 🧠 Visión por computador en el servidor | ✅ | `panelvault-ai-engine`, llamado por el backend |
+| 🗺️ Mapa de coordenadas con la secuencia de lectura | ✅ | Se pide por página y se guarda en IndexedDB para leer sin conexión |
+| 🔍 **Modo lectura guiada** (zoom viñeta por viñeta) | ✅ | Lector → "Viñeta por viñeta": encuadra cada viñeta en orden y oscurece el resto |
+
+---
+
+## 🖼️ Los 5 patrones de renderizado
+
+> **Renderizar** es armar el HTML que ve el usuario. La pregunta es **dónde** (servidor o navegador) y **cuándo** (al compilar o en cada petición). Cada patrón se usó **donde tiene sentido**, no en todas las pantallas por igual.
+
+| Patrón | Dónde | Por qué | Ventaja · Trade-off |
+|---|---|---|---|
+| 🧊 **SSG** (Static Site Generation) | Portada, 404, sin permiso | No dependen de datos ni del usuario | TTFB casi instantáneo desde la CDN · no sirve para datos que cambian |
+| ♻️ **ISR** (Incremental Static Regeneration) | `/catalogo/[slug]` | Se generan al compilar y se regeneran cada **60 s**, o **al instante** cuando un curador publica (`revalidateTag`) | Velocidad de SSG con datos frescos · hay que orquestar la invalidación |
+| 🌊 **Streaming SSR** | `/catalogo` | El encabezado y la búsqueda salen **de inmediato**; los resultados llegan después con `Suspense` | Rompe el "todo o nada" del SSR · más piezas que coordinar |
+| 🖥️ **SSR** (Server-Side Rendering) | Ingreso, registro, zona privada | Leen la **cookie de sesión** en cada petición | HTML listo y seguro · el servidor trabaja en cada visita |
+| 💻 **CSR** (Client-Side Rendering) | Biblioteca, lector, Leyendo, Marcadores, Análisis | Los datos viven en **IndexedDB** del dispositivo y deben funcionar **sin conexión** | Muy interactivo y offline · necesita descargar el JS antes |
+
+**Cómo se verifica:** en la salida de `npm run build`, cada ruta aparece como estática (`○`), generada con regeneración (`●`) o dinámica (`ƒ`).
+
+🔎 **SEO técnico:** HTML semántico, `lang="es"`, títulos y descripciones por página (`metadata`), Open Graph, *manifest* de la app y contenido público prerenderizado (SSG/ISR) que los buscadores leen sin ejecutar JavaScript.
+
+---
+
+## 🧪 Fundamentos del navegador aplicados
+
+### 🎬 Ciclo de vida de un frame y pipeline de renderizado
+
+El navegador convierte HTML + CSS + JS en píxeles así: **DOM → CSSOM → Render Tree → Layout → Paint → Composite**. El **hilo principal** hace JS, estilos, layout y paint; el **compositor** y la **GPU** combinan capas y pueden animar sin el hilo principal.
+
+Cómo lo aprovecha PanelVault:
+
+- 🎞️ El zoom viñeta por viñeta usa **`transform`** (traslación y escala). Esa propiedad la anima el **compositor en la GPU**: no dispara *layout* ni *paint* en cada frame.
+- ♿ Las animaciones respetan `prefers-reduced-motion`.
+- 🖼️ Las páginas se muestran desde `Blob` locales (`URL.createObjectURL`), sin volver a descargarlas.
+
+### 🔁 Event Loop: tasks y microtasks
+
+> 🍽️ **Analogía:** JavaScript es un restaurante. El **Call Stack** es el cocinero, la **Task Queue** son los pedidos normales, la **Microtask Queue** los pedidos prioritarios y el **Event Loop** es el encargado que decide qué se atiende. **Las microtasks siempre van antes que la siguiente task.**
+
+| Tipo | Dónde aparece en PanelVault |
+|---|---|
+| ⚡ **Microtasks** (Promesas) | Lecturas y escrituras en IndexedDB (`idb`), `fetch` al BFF, huella SHA-256 con Web Crypto |
+| 🕐 **Tasks** (temporizadores, eventos) | Consulta periódica del estado del análisis, reintento de la bandeja de salida cada minuto, avisos temporales, el evento `online` (envía la bandeja de salida al volver la red), clics y teclado del lector |
+
+### 👷 Workers y paralelismo
+
+| Tipo | Para qué sirve | ¿Accede al DOM? | ¿Vive sin la página? | En PanelVault |
+|---|---|---|---|---|
+| 🧵 **Web Worker** | Trabajo pesado en otro hilo | No | No | ✅ Descompresión de CBZ (fflate asíncrono) y renderizado de PDF (worker de pdf.js) |
+| 🪟 **Shared Worker** | Un proceso compartido entre pestañas | No | No | ⏳ Pendiente (sincronización en vivo entre pestañas) |
+| 🛰️ **Service Worker** | Interceptar peticiones, caché, offline | No | Temporalmente sí | ✅ `public/sw.js` |
+
+- ✉️ **`postMessage`:** la página le avisa al service worker que borre las pantallas guardadas al **cerrar sesión** (`CLEAR_PAGES`). fflate y pdf.js también se comunican con sus workers por `postMessage`.
+- 🧠 **`SharedArrayBuffer` y `crossOriginIsolated`:** ⏳ pendientes. Requieren las cabeceras COOP y COEP; se evaluarán junto con la sincronización entre pestañas.
+
+**Estrategias del service worker:**
+
+| Recurso | Estrategia | Por qué |
+|---|---|---|
+| `/_next/static/*` | Primero la caché | Llevan *hash* en el nombre: nunca cambian |
+| Páginas | Primero la red; sin red, la copia guardada | Siempre la versión más nueva si hay conexión |
+| `/api/*` | Nunca se guarda | Datos privados y siempre frescos |
+
+🔐 **Ciberseguridad del service worker:** como intercepta peticiones, **nunca guarda respuestas de la API**, se limpia al cerrar sesión y solo controla el propio origen.
+
+### 📏 INP (Interaction to Next Paint)
+
+> **INP = Input Delay + Processing + Presentation Delay.** Bueno: **< 200 ms** · Necesita mejora: 200–500 ms · Pobre: > 500 ms. Reemplazó a FID porque mide **todas** las interacciones y el ciclo completo, no solo la primera espera.
+
+Decisiones que lo protegen: trabajo pesado en workers, animaciones en el compositor y lecturas de datos asíncronas. ⏳ **Pendiente:** un panel que **mida y muestre** el INP real de la sesión y sus tres componentes.
+
+---
+
+## 🧅 Arquitectura de 7 capas
+
+| Capa | Dónde |
+|---|---|
+| 1️⃣ **Cliente** | Este repo en el navegador: sin secretos ni reglas de negocio. Se asume **"regalado a un atacante"** |
+| 2️⃣ **Borde / API Gateway** | El **servidor de Next.js (BFF)**: guarda los tokens en cookies `httpOnly`, oculta la URL real del backend y **firma con HMAC** cada petición |
+| 3️⃣ **Aplicación** | `panelvault-backend` (Spring Boot) |
+| 4️⃣ **Asíncrona** | Workers del navegador + cola de análisis del backend |
+| 5️⃣ **IA** | `panelvault-ai-engine` |
+| 6️⃣ **Datos** | PostgreSQL (Neon) e **IndexedDB** del dispositivo |
+| 7️⃣ **DevOps** | GitHub Actions, Docker, Vercel, Render |
+
+```mermaid
+flowchart LR
+    U[👤 Navegador<br/>IndexedDB + Service Worker] --> F[🎨 Next.js BFF<br/>este repo · Vercel]
+    F -- HMAC --> B[⚙️ Backend<br/>Render]
+    B --> DB[(🐘 PostgreSQL<br/>Neon)]
+    B -- HMAC --> AI[🧠 AI Engine<br/>Render]
+```
+
+---
+
+## 🗂️ Estructura del código
 
 ```
 src/
-├── app/                      Rutas (delgadas: solo componen pantallas)
+├── app/                      🛣️ Rutas (delgadas: solo componen pantallas)
 │   ├── (public)/             Portada, catálogo, ingreso, registro
 │   ├── (app)/                Pantallas privadas con barra lateral
 │   ├── (reader)/lector/      Lector a pantalla completa
-│   └── api/                  BFF: /api/auth/* y /api/pv/[...path]
-├── features/                 Un módulo por funcionalidad
+│   └── api/                  BFF: /api/auth/*, /api/pv/[...path], /api/health
+├── features/                 🧩 Un módulo por funcionalidad
 │   ├── auth, security        Ingreso, registro, 2FA
 │   ├── catalog, curation     Catálogo público y curaduría
 │   ├── library               Biblioteca local, importación, sincronización
 │   ├── reader                Lector, mapas de viñetas, progreso, marcadores
 │   ├── reading, bookmarks    Leyendo y Marcadores
 │   └── analysis              Análisis de páginas
-├── server/                   Código que SOLO corre en el servidor de Next
+├── server/                   🔒 Código que SOLO corre en el servidor de Next
 │   ├── backend/              Cliente firmado (HMAC) y reenvío del BFF
-│   ├── auth/                 Cookies, renovación de tokens, proxy de rutas
+│   ├── auth/                 Cookies, renovación de tokens
 │   └── catalog/              Lecturas cacheadas del catálogo
-├── shared/                   Piezas reutilizables (ui, layout, offline, api, theme)
-└── proxy.ts                  Proxy de Next (antes "middleware"): protege las rutas privadas
+├── shared/                   ♻️ Piezas reutilizables (ui, layout, offline, api, theme)
+└── proxy.ts                  🚪 Protege las rutas privadas
 ```
 
 Las pruebas viven junto al código que prueban (`*.test.ts(x)`).
 
-## Seguridad
+---
 
-- **Backend-for-Frontend:** el navegador nunca habla con el backend ni ve los tokens. Next guarda
-  el token de acceso y el de renovación en **cookies httpOnly, SameSite=Lax** (Secure en producción)
-  y reenvía las peticiones por `/api/pv/*` solo hacia áreas permitidas.
-- **Firma del gateway:** cada petición al backend lleva `X-PanelVault-Timestamp` y
-  `X-PanelVault-Signature` (HMAC-SHA256 de `timestamp\nMÉTODO\nruta?query\nsha256(cuerpo)`), con el
-  secreto `PANELVAULT_GATEWAY_SECRET` que solo conocen los dos servidores.
-- **Renovación coordinada:** si varias peticiones llegan con el token vencido, se renueva una sola
-  vez; el backend rota el token y revoca la sesión si detecta reutilización.
-- **CSRF:** además de SameSite, las rutas que cambian datos rechazan peticiones de otro sitio
-  (`Sec-Fetch-Site` / `Origin`).
-- **Roles:** la interfaz oculta lo que no corresponde, pero **el backend valida el rol** en cada
-  petición. Un lector que entra a `/curaduria` ve la página "sin permiso".
-- **Redirecciones:** el destino tras el ingreso solo puede ser una ruta interna.
-- **Cabeceras:** `X-Content-Type-Options`, `X-Frame-Options: DENY`, `Referrer-Policy`,
-  `Permissions-Policy`; sin `X-Powered-By`.
-- Los archivos de los cómics **nunca se suben**: solo viajan sus metadatos.
+## 🔐 Seguridad
 
-## Offline-first
+- 🧱 **Backend-for-Frontend:** el navegador **nunca** habla con el backend ni ve los tokens. Next los guarda en **cookies `httpOnly`, `SameSite=Lax`** (`Secure` en producción) y reenvía por `/api/pv/*` solo hacia áreas permitidas.
+- 🔏 **Firma del gateway:** cada petición al backend lleva `X-PanelVault-Timestamp` y `X-PanelVault-Signature` (HMAC-SHA256 de `timestamp\nMÉTODO\nruta?query\nsha256(cuerpo)`), con un secreto que solo conocen los dos servidores.
+- 🔄 **Renovación coordinada:** si varias peticiones llegan con el token vencido, se renueva **una sola vez**.
+- 🛑 **CSRF:** además de `SameSite`, las rutas que cambian datos rechazan peticiones de otro sitio (`Sec-Fetch-Site` / `Origin`).
+- 👥 **Roles:** la interfaz oculta lo que no corresponde, pero **el backend valida el rol** en cada petición. Un lector que entra a `/curaduria` ve "sin permiso".
+- ↪️ **Redirecciones seguras:** el destino tras el ingreso solo puede ser una ruta interna.
+- 🧾 **Cabeceras:** `X-Content-Type-Options`, `X-Frame-Options: DENY`, `Referrer-Policy`, `Permissions-Policy`; sin `X-Powered-By`.
+- 📁 **Los archivos de los cómics nunca se suben:** solo viajan sus metadatos.
 
-1. **IndexedDB por usuario** (`panelvault-<id>`): cómics, páginas, progreso, marcadores y mapas
-   de viñetas.
-2. **Bandeja de salida:** cada cambio se guarda primero en el dispositivo y se encola. Se envía al
-   recuperar la red, al encolar y cada minuto. Las operaciones son idempotentes (PUT con UUID del
-   cliente, DELETE que tolera 404) y el progreso se resuelve con "gana el último" (misma regla que
-   el backend).
-3. **Service worker** (`public/sw.js`): guarda las pantallas principales y sus archivos para
-   abrirlas sin conexión. El detalle y el lector reciben el id por la query (`?id=`), así una sola
-   copia sirve para cualquier cómic.
+---
 
-## Requisitos
+## 📴 Offline-first
 
-- Node.js 22.12 o superior
-- Para usarlo completo: el backend en `http://localhost:9096` y el motor de IA encendidos
+1. 🗄️ **IndexedDB por usuario** (`panelvault-<id>`): cómics, páginas, progreso, marcadores y mapas de viñetas.
+2. 📤 **Bandeja de salida:** cada cambio se guarda primero en el dispositivo y se encola. Se envía al recuperar la red, al encolar y cada minuto. Las operaciones son **idempotentes** (PUT con UUID del cliente) y el progreso se resuelve con **"gana el último"**, la misma regla que el backend.
+3. 🛰️ **Service worker:** guarda las pantallas principales para abrirlas sin conexión. El detalle y el lector reciben el id por la query (`?id=`), así una sola copia sirve para cualquier cómic.
 
-## Puesta en marcha (PowerShell)
+---
+
+## 🎨 Sistema de diseño
+
+**"Cómic editorial"**, en **modo claro** por defecto (con modo oscuro opcional y sin parpadeo al recargar):
+
+| Token | Color | Uso |
+|---|---|---|
+| `paper` | `#FAF6EE` | Fondo tipo papel |
+| `ink` / `line` | `#16161A` | Texto, bordes de 2 px y sombras sólidas |
+| `accent` | `#C7321F` | Acciones principales (contraste AA con texto blanco) |
+| `highlight` | `#FFD23F` | Etiquetas y resaltados |
+| `ai` | `#12A4A0` | **Solo** para lo que produce la IA (viñetas detectadas) |
+
+Tipografías **Bricolage Grotesque** (títulos), **Inter** (texto) y **JetBrains Mono** (datos técnicos). Diseño base generado con Google Stitch y replicado como componentes propios.
+
+---
+
+## 💻 Ejecutar en local
+
+**Requisitos:** Node.js 22.12 o superior. Para usarlo completo, el backend en `http://localhost:9096` y el motor de IA encendidos.
 
 ```powershell
 npm ci
@@ -117,63 +283,67 @@ Copy-Item .env.example .env.local
 npm run dev
 ```
 
-Abre <http://localhost:3000>. Si el backend tiene el gateway activado, pon el mismo
-`PANELVAULT_GATEWAY_SECRET` en `.env.local`.
-
-## Scripts
+Abre <http://localhost:3000>.
 
 | Comando | Qué hace |
 |---|---|
-| `npm run dev` | Servidor de desarrollo en el puerto 3000 |
-| `npm test` | Ejecuta todas las pruebas una vez |
+| `npm run dev` | Servidor de desarrollo (puerto 3000) |
+| `npm test` | Ejecuta todas las pruebas |
 | `npm run lint` | Revisa el código con ESLint |
 | `npm run typecheck` | Verifica los tipos de TypeScript |
 | `npm run build` | Compilación de producción (funciona aunque el backend esté apagado) |
-| `npm start` | Sirve la compilación de producción |
+| `npm start` | Sirve la compilación de producción (aquí se activa el service worker) |
 
-## Variables de entorno
+---
+
+## 🔧 Variables de entorno
 
 | Variable | Obligatoria | Descripción |
 |---|---|---|
 | `NEXT_PUBLIC_SITE_URL` | No | URL pública del frontend (metadatos) |
-| `PANELVAULT_API_URL` | Sí | URL del backend; solo la usa el servidor de Next |
+| `PANELVAULT_API_URL` | ✅ Sí | URL del backend; solo la usa el servidor de Next |
 | `PANELVAULT_GATEWAY_SECRET` | Si el gateway está activo | Mismo valor que en el backend (mínimo 32 caracteres) |
-| `PANELVAULT_SECURE_COOKIES` | No | Fuerza cookies Secure (`true`/`false`); por defecto solo en producción |
+| `PANELVAULT_SECURE_COOKIES` | No | Fuerza cookies `Secure` (`true`/`false`); por defecto solo en producción |
 
 Ver `.env.example`. Los archivos `.env*` reales nunca se suben a Git.
 
-## Docker
+---
+
+## 🧪 Pruebas y calidad
+
+- ✅ **393 pruebas** con Vitest y Testing Library: componentes, BFF, firma HMAC, cookies, renovación de tokens, IndexedDB, bandeja de salida, lector, importación de CBZ y PDF, accesibilidad.
+- 🎭 **Verificación de punta a punta** durante el desarrollo, con Playwright en un navegador real (registro, 2FA, biblioteca, lector, análisis, modo sin conexión y roles). Esos scripts no forman parte del repositorio.
+- 🧹 ESLint y TypeScript estricto sin errores.
+- 🤖 **Integración continua:** `.github/workflows/ci.yml` corre lint, tipos, pruebas y compilación en cada push a `main`.
+
+---
+
+## 🚀 Despliegue
+
+Todo en planes gratuitos:
+
+| Pieza | Plataforma | Notas |
+|---|---|---|
+| 🎨 Frontend | **Vercel** | Detecta Next.js solo |
+| ⚙️ Backend | **Render** (Docker) | Se duerme tras 15 min sin uso |
+| 🧠 Motor de IA | **Render** (Docker) | El backend lo despierta antes de analizar |
+| 🐘 Base de datos | **Neon** (PostgreSQL) | Gratuita y sin expiración |
+
+**Adaptaciones a los planes gratuitos:**
+
+- 😴 **Arranque en frío:** el BFF espera hasta 2 minutos al backend, la portada lo "despierta" en segundo plano (`/api/health`) y los formularios avisan si tarda.
+- 📏 **Límite de 4,5 MB por petición de Vercel:** una página más pesada se reduce en el navegador (lado mayor de 2400 px, JPEG) antes de analizarla. Como la IA responde en coordenadas relativas, sirven igual para la imagen original.
+
+**Variables en Vercel:** `PANELVAULT_API_URL`, `PANELVAULT_GATEWAY_SECRET` y `NEXT_PUBLIC_SITE_URL`. Ningún secreto va en el repositorio.
 
 ```powershell
 docker build -t panelvault-frontend .
 docker run --rm -p 3000:3000 -e PANELVAULT_API_URL=http://host.docker.internal:9096 panelvault-frontend
 ```
 
-La imagen usa el modo `standalone` de Next (solo el servidor compilado) y corre sin root.
+---
 
-## Despliegue
-
-Todo en planes gratuitos:
-
-| Pieza | Plataforma | Notas |
-|---|---|---|
-| Frontend | **Vercel** | Detecta Next.js solo; región `iad1` (Washington) |
-| Backend | **Render** (Docker) | Región Virginia; se duerme tras 15 min sin uso |
-| Motor de IA | **Render** (Docker) | El backend lo despierta con `/health` antes de analizar |
-| Base de datos | **Neon** (PostgreSQL) | Región AWS us-east-1, cerca de Render y Vercel |
-
-Adaptaciones para los planes gratuitos:
-
-- **Arranque en frío:** el servidor de Next espera hasta 2 minutos al backend, la portada lo
-  "despierta" en segundo plano (`/api/health`) y los formularios de ingreso avisan si tarda.
-- **Límite de 4,5 MB por petición de Vercel:** una página más pesada se reduce en el navegador
-  (lado mayor de 2400 px, JPEG) antes de enviarla a analizar. Las viñetas vuelven en coordenadas
-  relativas, así que valen igual para la imagen original.
-
-Variables en Vercel: `PANELVAULT_API_URL` (URL del backend en Render), `PANELVAULT_GATEWAY_SECRET`
-(el mismo del backend) y `NEXT_PUBLIC_SITE_URL` (la URL de Vercel). Ningún secreto va en el repositorio.
-
-## Integración continua
-
-`.github/workflows/ci.yml` corre lint, verificación de tipos, pruebas y compilación en cada
-push a `main`.
+<p align="center">
+🎨 <b>PanelVault Frontend</b> · Caso de estudio 1 · Programación Orientada a la Web<br/>
+David Fernando Ramírez de la Parra · Universidad Cooperativa de Colombia
+</p>
