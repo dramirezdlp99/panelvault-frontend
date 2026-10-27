@@ -3,7 +3,7 @@ import type { ComicFormat, LocalComic, ReadingDirection } from "@/shared/offline
 
 import { findByFingerprint, saveImportedComic } from "../repository";
 import { detectFormat, ImportError, MAX_FILE_BYTES, mimeFor, naturalCompare, titleFromFileName } from "./detect";
-import { extractCbz } from "./extract-cbz";
+import { extractCbzInWorker, type ExtractControl } from "./extract-cbz-worker";
 import { fingerprintOfParts, sha256Hex } from "./hash";
 import { renderPdf } from "./render-pdf";
 import { makeThumbnail } from "./thumbnail";
@@ -11,17 +11,17 @@ import { makeThumbnail } from "./thumbnail";
 export type ImportStage = "reading" | "fingerprint" | "pages" | "saving" | "done";
 export type ImportProgress = { stage: ImportStage; done?: number; total?: number };
 
-export type ImportOptions = { readingDirection: ReadingDirection; now?: Date };
+export type ImportOptions = { readingDirection: ReadingDirection; now?: Date; signal?: AbortSignal };
 
 /** Piezas reemplazables en pruebas (el navegador real usa las de verdad). */
 export type ImportDeps = {
-  extractCbz: (data: Uint8Array) => Promise<Blob[]>;
+  extractCbz: (data: Uint8Array, control?: ExtractControl) => Promise<Blob[]>;
   renderPdf: (data: Uint8Array, onPage?: (done: number, total: number) => void) => Promise<Blob[]>;
   makeThumbnail: (page: Blob) => Promise<Blob | null>;
   newId: () => string;
 };
 
-const defaultDeps: ImportDeps = { extractCbz, renderPdf, makeThumbnail, newId: () => crypto.randomUUID() };
+const defaultDeps: ImportDeps = { extractCbz: extractCbzInWorker, renderPdf, makeThumbnail, newId: () => crypto.randomUUID() };
 
 export class DuplicateComicError extends ImportError {
   constructor(readonly existing: LocalComic) {
@@ -65,7 +65,11 @@ export async function importComic(
 
   onProgress({ stage: "pages" });
   let pages: Blob[];
-  if (format === "CBZ") pages = await deps.extractCbz(new Uint8Array(buffers[0]));
+  if (format === "CBZ")
+    pages = await deps.extractCbz(new Uint8Array(buffers[0]), {
+      signal: options.signal,
+      onProgress: (done, total) => onProgress({ stage: "pages", done, total }),
+    });
   else if (format === "PDF") pages = await deps.renderPdf(new Uint8Array(buffers[0]), (done, total) => onProgress({ stage: "pages", done, total }));
   else pages = ordered.map((file, i) => new Blob([buffers[i]], { type: file.type || mimeFor(file.name) }));
   if (pages.length === 0) throw new ImportError("No se encontraron páginas.");
