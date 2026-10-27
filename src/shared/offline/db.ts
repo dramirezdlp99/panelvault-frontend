@@ -40,6 +40,19 @@ export function openLocalDb(userId: string): Promise<LocalDb> {
 /** Evento que avisa a las pantallas que los datos locales cambiaron y deben releerse. */
 export const DB_CHANGED_EVENT = "panelvault:db-changed";
 
-export function notifyDbChanged(): void {
-  if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent(DB_CHANGED_EVENT));
+let relay: (() => void) | null = null;
+
+/** Registra quién avisa a las otras pestañas (lo hace LocalStoreProvider con el TabHub). */
+export function setDbChangeRelay(fn: (() => void) | null): void {
+  relay = fn;
+}
+
+/**
+ * Avisa que los datos locales cambiaron. Si el cambio nació en ESTA pestaña, también se
+ * avisa a las demás; si llegó de otra pestaña (remote), solo se relee aquí (sin rebote).
+ */
+export function notifyDbChanged(options: { remote?: boolean } = {}): void {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(new CustomEvent(DB_CHANGED_EVENT, { detail: { remote: Boolean(options.remote) } }));
+  if (!options.remote) relay?.();
 }
