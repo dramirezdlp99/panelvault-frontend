@@ -39,6 +39,7 @@ export function ImportDialog({ open, onClose, onImported, initialFiles }: Import
   const [progress, setProgress] = useState<ImportProgress | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [dragging, setDragging] = useState(false);
+  const abortRef = useRef<AbortController | null>(null);
   const busy = progress !== null && progress.stage !== "done";
 
   useEffect(() => {
@@ -70,7 +71,9 @@ export function ImportDialog({ open, onClose, onImported, initialFiles }: Import
     if (!db || files.length === 0) return;
     setError(null);
     try {
-      const comic = await importComic(db, files, { readingDirection: direction }, setProgress);
+      const controller = new AbortController();
+      abortRef.current = controller;
+      const comic = await importComic(db, files, { readingDirection: direction, signal: controller.signal }, setProgress);
       onImported(comic);
     } catch (caught) {
       if (!(caught instanceof ImportError)) console.error("Error al importar", caught);
@@ -162,10 +165,23 @@ export function ImportDialog({ open, onClose, onImported, initialFiles }: Import
             </p>
           ) : null}
 
+          {progress?.stage === "pages" && progress.total ? (
+            <div aria-hidden className="h-3 overflow-hidden rounded-full border-2 border-line bg-paper">
+              <div className="h-full bg-accent transition-[width]" style={{ width: `${Math.round(((progress.done ?? 0) / progress.total) * 100)}%` }} />
+            </div>
+          ) : null}
+
           <div className="flex justify-end gap-3">
-            <Button variant="secondary" onClick={onClose} disabled={busy}>
-              Cancelar
-            </Button>
+            {busy ? (
+              // Detiene la descompresión en el worker sin cerrar la pestaña (bandera en memoria compartida).
+              <Button variant="secondary" onClick={() => abortRef.current?.abort()}>
+                Detener
+              </Button>
+            ) : (
+              <Button variant="secondary" onClick={onClose}>
+                Cancelar
+              </Button>
+            )}
             <Button onClick={() => void start()} disabled={busy || files.length === 0 || !db}>
               Importar
             </Button>
