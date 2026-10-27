@@ -16,6 +16,7 @@ export const config = {
     "/analisis/:path*",
     "/seguridad/:path*",
     "/curaduria/:path*",
+    "/laboratorio/:path*",
     "/api/pv/:path*",
   ],
 };
