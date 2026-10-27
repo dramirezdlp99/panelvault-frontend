@@ -9,7 +9,7 @@
 ![TypeScript](https://img.shields.io/badge/TypeScript-estricto-3178C6?logo=typescript&logoColor=white)
 ![Tailwind](https://img.shields.io/badge/Tailwind%20CSS-4-06B6D4?logo=tailwindcss&logoColor=white)
 ![PWA](https://img.shields.io/badge/offline--first-Service%20Worker-5A0FC8?logo=pwa&logoColor=white)
-![Tests](https://img.shields.io/badge/tests-393%20en%20verde-2ea44f)
+![Tests](https://img.shields.io/badge/tests-404%20en%20verde-2ea44f)
 ![Vercel](https://img.shields.io/badge/deploy-Vercel-000000?logo=vercel&logoColor=white)
 ![Costo](https://img.shields.io/badge/costo-100%25%20gratuito-success)
 
@@ -39,7 +39,7 @@
 13. [Variables de entorno](#-variables-de-entorno)
 14. [Pruebas y calidad](#-pruebas-y-calidad)
 15. [Despliegue](#-despliegue)
-16. [Estado y próximos pasos](#-estado-y-próximos-pasos)
+16. [Estado del proyecto](#-estado-del-proyecto)
 
 ---
 
@@ -76,6 +76,7 @@ PanelVault está dividido en **tres repositorios independientes**:
 | 🔬 **Análisis** | Sube una página y ve las viñetas detectadas, su confianza y el tiempo de cada etapa de la IA |
 | 🛠️ **Curaduría** | (rol CURADOR) Crear, editar, publicar y borrar obras del catálogo |
 | 🛡️ **Seguridad** | Activar la 2FA con código QR y códigos de recuperación |
+| 🧪 **Laboratorio** | Event Loop, Web/Shared Workers, memoria compartida, bloqueo y desbloqueo del hilo principal e INP, en vivo |
 
 ---
 
@@ -87,7 +88,7 @@ PanelVault está dividido en **tres repositorios independientes**:
 | ⚛️ | **React 19** + **TypeScript** estricto | Componentes y tipos |
 | 🎨 | **Tailwind CSS 4** | Sistema de diseño propio ("cómic editorial") |
 | 🗄️ | **IndexedDB** (`idb`) | Biblioteca local: cómics, páginas, progreso, marcadores |
-| 📦 | **fflate** | Descomprimir CBZ (ZIP) **en segundo plano** |
+| 📦 | **fflate** | Descomprimir CBZ (ZIP) dentro de un **Web Worker propio** |
 | 📄 | **pdf.js** | Convertir cada página de un PDF en imagen, **en su propio worker** |
 | 📱 | **qrcode** | Generar el QR de la 2FA en el navegador |
 | 🧪 | **Vitest**, **Testing Library**, `fake-indexeddb` | Pruebas automáticas |
@@ -103,10 +104,10 @@ Todo es gratuito y de código abierto.
 
 | Requisito | Estado | Cómo se cumple |
 |---|---|---|
-| ⚡ **Respuesta de interfaz garantizada** | ✅ | La descompresión del CBZ (fflate asíncrono) y el renderizado de PDF (pdf.js) corren en **workers**, fuera del hilo principal. El zoom del lector usa `transform` de CSS, que anima la GPU sin recalcular el *layout* |
-| 🗜️ **Procesamiento de archivos en segundo plano** | 🟡 Parcial | La descompresión ocurre en segundo plano y cada página se guarda por separado en IndexedDB; el visor las carga una a una desde ahí. Falta la entrega **progresiva** mientras todavía se descomprime |
+| ⚡ **Respuesta de interfaz garantizada** | ✅ | La descompresión del CBZ corre en un **Web Worker propio** y el PDF en el worker de pdf.js, fuera del hilo principal. El zoom del lector usa `transform` de CSS (compositor/GPU). El **INP se mide en vivo** y queda por debajo de 200 ms |
+| 🗜️ **Procesamiento de archivos en segundo plano** | ✅ | El worker lista las páginas, las extrae **una por una** y las entrega apenas están listas (*Transferable*, sin copias). El avance viaja por **SharedArrayBuffer** y la importación se puede **detener** en cualquier momento. Cada página se guarda por separado y el visor solo carga la que estás leyendo |
 | 📴 **Persistencia y offline-first** | ✅ | El **service worker** intercepta las peticiones y guarda las pantallas; los cómics viven en **IndexedDB**. Sin red, la app abre y deja leer |
-| 🪟 **Sincronización multi-pestaña** | 🟡 Parcial | Todas las pestañas comparten la misma base local y el progreso se sincroniza entre **dispositivos** vía backend. Falta el aviso **en vivo** entre pestañas abiertas (BroadcastChannel o Shared Worker) |
+| 🪟 **Sincronización multi-pestaña** | ✅ | Un **Shared Worker** conecta todas las pestañas (con *fallback* a **BroadcastChannel**): biblioteca, progreso y marcadores se actualizan **en vivo**, y el lector avisa en qué página vas en la otra pestaña. Con **Web Locks** solo una pestaña envía la bandeja de salida (sin peticiones duplicadas) |
 
 **Sección 1.3 · Inteligencia artificial**
 
@@ -128,7 +129,7 @@ Todo es gratuito y de código abierto.
 | ♻️ **ISR** (Incremental Static Regeneration) | `/catalogo/[slug]` | Se generan al compilar y se regeneran cada **60 s**, o **al instante** cuando un curador publica (`revalidateTag`) | Velocidad de SSG con datos frescos · hay que orquestar la invalidación |
 | 🌊 **Streaming SSR** | `/catalogo` | El encabezado y la búsqueda salen **de inmediato**; los resultados llegan después con `Suspense` | Rompe el "todo o nada" del SSR · más piezas que coordinar |
 | 🖥️ **SSR** (Server-Side Rendering) | Ingreso, registro, zona privada | Leen la **cookie de sesión** en cada petición | HTML listo y seguro · el servidor trabaja en cada visita |
-| 💻 **CSR** (Client-Side Rendering) | Biblioteca, lector, Leyendo, Marcadores, Análisis | Los datos viven en **IndexedDB** del dispositivo y deben funcionar **sin conexión** | Muy interactivo y offline · necesita descargar el JS antes |
+| 💻 **CSR** (Client-Side Rendering) | Biblioteca, lector, Leyendo, Marcadores, Análisis, Laboratorio | Los datos viven en **IndexedDB** del dispositivo y deben funcionar **sin conexión** | Muy interactivo y offline · necesita descargar el JS antes |
 
 **Cómo se verifica:** en la salida de `npm run build`, cada ruta aparece como estática (`○`), generada con regeneración (`●`) o dinámica (`ƒ`).
 
@@ -161,12 +162,18 @@ Cómo lo aprovecha PanelVault:
 
 | Tipo | Para qué sirve | ¿Accede al DOM? | ¿Vive sin la página? | En PanelVault |
 |---|---|---|---|---|
-| 🧵 **Web Worker** | Trabajo pesado en otro hilo | No | No | ✅ Descompresión de CBZ (fflate asíncrono) y renderizado de PDF (worker de pdf.js) |
-| 🪟 **Shared Worker** | Un proceso compartido entre pestañas | No | No | ⏳ Pendiente (sincronización en vivo entre pestañas) |
+| 🧵 **Web Worker** | Trabajo pesado en otro hilo | No | No | ✅ Worker propio de CBZ (`cbz.worker.ts`), worker de pdf.js y worker del laboratorio (cálculo pesado, `Atomics.wait`) |
+| 🪟 **Shared Worker** | Un proceso compartido entre pestañas | No | No | ✅ `public/tab-hub-worker.js`: reenvía los cambios entre pestañas y cuenta las pestañas abiertas |
 | 🛰️ **Service Worker** | Interceptar peticiones, caché, offline | No | Temporalmente sí | ✅ `public/sw.js` |
 
-- ✉️ **`postMessage`:** la página le avisa al service worker que borre las pantallas guardadas al **cerrar sesión** (`CLEAR_PAGES`). fflate y pdf.js también se comunican con sus workers por `postMessage`.
-- 🧠 **`SharedArrayBuffer` y `crossOriginIsolated`:** ⏳ pendientes. Requieren las cabeceras COOP y COEP; se evaluarán junto con la sincronización entre pestañas.
+- ✉️ **`postMessage`:** las páginas del CBZ viajan del worker al hilo principal como *Transferable*; las pestañas se hablan por los puertos del Shared Worker; y la página le pide al service worker borrar las pantallas guardadas al **cerrar sesión** (`CLEAR_PAGES`).
+- 🧠 **`SharedArrayBuffer`:** memoria compartida entre el hilo principal y los workers, leída y escrita con `Atomics`: avance y cancelación de la importación, y el bloqueo y desbloqueo del laboratorio.
+- 🛡️ **`crossOriginIsolated = true`:** la app envía `Cross-Origin-Opener-Policy: same-origin` y `Cross-Origin-Embedder-Policy: require-corp`. Funciona porque PanelVault solo carga recursos de su propio origen (fuentes autoalojadas, sin CDN).
+
+| | `postMessage` | `SharedArrayBuffer` |
+|---|---|---|
+| Cómo comparte | **Envía** una copia (o transfiere) de un contexto a otro | Varios contextos **leen y escriben la misma memoria** |
+| En PanelVault | Páginas del CBZ, mensajes entre pestañas, órdenes al service worker | Barra de avance, cancelación, `Atomics.wait` / `notify`, desbloqueo del hilo |
 
 **Estrategias del service worker:**
 
@@ -176,13 +183,15 @@ Cómo lo aprovecha PanelVault:
 | Páginas | Primero la red; sin red, la copia guardada | Siempre la versión más nueva si hay conexión |
 | `/api/*` | Nunca se guarda | Datos privados y siempre frescos |
 
-🔐 **Ciberseguridad del service worker:** como intercepta peticiones, **nunca guarda respuestas de la API**, se limpia al cerrar sesión y solo controla el propio origen.
+🔐 **Ciberseguridad del service worker:** como intercepta peticiones, **nunca guarda respuestas de la API**, se limpia al cerrar sesión, solo controla el propio origen y deja pasar sin tocar los scripts de los workers.
 
 ### 📏 INP (Interaction to Next Paint)
 
 > **INP = Input Delay + Processing + Presentation Delay.** Bueno: **< 200 ms** · Necesita mejora: 200–500 ms · Pobre: > 500 ms. Reemplazó a FID porque mide **todas** las interacciones y el ciclo completo, no solo la primera espera.
 
-Decisiones que lo protegen: trabajo pesado en workers, animaciones en el compositor y lecturas de datos asíncronas. ⏳ **Pendiente:** un panel que **mida y muestre** el INP real de la sesión y sus tres componentes.
+Decisiones que lo protegen: trabajo pesado en workers, animaciones en el compositor y lecturas de datos asíncronas.
+
+**Medición real:** `PerformanceObserver` (tipo `event`) registra cada interacción, la agrupa por `interactionId` y calcula el INP como Google (la peor, descartando una de cada 50). En la barra superior siempre se ve el **INP de la sesión** (uso normal: decenas de milisegundos), y el **Laboratorio** muestra cada interacción con su **espera, procesamiento y presentación**, más un botón que provoca una interacción lenta para comparar.
 
 ---
 
@@ -193,7 +202,7 @@ Decisiones que lo protegen: trabajo pesado en workers, animaciones en el composi
 | 1️⃣ **Cliente** | Este repo en el navegador: sin secretos ni reglas de negocio. Se asume **"regalado a un atacante"** |
 | 2️⃣ **Borde / API Gateway** | El **servidor de Next.js (BFF)**: guarda los tokens en cookies `httpOnly`, oculta la URL real del backend y **firma con HMAC** cada petición |
 | 3️⃣ **Aplicación** | `panelvault-backend` (Spring Boot) |
-| 4️⃣ **Asíncrona** | Workers del navegador + cola de análisis del backend |
+| 4️⃣ **Asíncrona** | Web Workers, Shared Worker y service worker del navegador + cola de análisis del backend |
 | 5️⃣ **IA** | `panelvault-ai-engine` |
 | 6️⃣ **Datos** | PostgreSQL (Neon) e **IndexedDB** del dispositivo |
 | 7️⃣ **DevOps** | GitHub Actions, Docker, Vercel, Render |
@@ -223,12 +232,13 @@ src/
 │   ├── library               Biblioteca local, importación, sincronización
 │   ├── reader                Lector, mapas de viñetas, progreso, marcadores
 │   ├── reading, bookmarks    Leyendo y Marcadores
-│   └── analysis              Análisis de páginas
+│   ├── analysis              Análisis de páginas
+│   └── lab                   Laboratorio: Event Loop, workers, memoria compartida, INP
 ├── server/                   🔒 Código que SOLO corre en el servidor de Next
 │   ├── backend/              Cliente firmado (HMAC) y reenvío del BFF
 │   ├── auth/                 Cookies, renovación de tokens
 │   └── catalog/              Lecturas cacheadas del catálogo
-├── shared/                   ♻️ Piezas reutilizables (ui, layout, offline, api, theme)
+├── shared/                   ♻️ Piezas reutilizables (ui, layout, offline, browser, performance, api, theme)
 └── proxy.ts                  🚪 Protege las rutas privadas
 ```
 
@@ -244,7 +254,7 @@ Las pruebas viven junto al código que prueban (`*.test.ts(x)`).
 - 🛑 **CSRF:** además de `SameSite`, las rutas que cambian datos rechazan peticiones de otro sitio (`Sec-Fetch-Site` / `Origin`).
 - 👥 **Roles:** la interfaz oculta lo que no corresponde, pero **el backend valida el rol** en cada petición. Un lector que entra a `/curaduria` ve "sin permiso".
 - ↪️ **Redirecciones seguras:** el destino tras el ingreso solo puede ser una ruta interna.
-- 🧾 **Cabeceras:** `X-Content-Type-Options`, `X-Frame-Options: DENY`, `Referrer-Policy`, `Permissions-Policy`; sin `X-Powered-By`.
+- 🧾 **Cabeceras:** `X-Content-Type-Options`, `X-Frame-Options: DENY`, `Referrer-Policy`, `Permissions-Policy`, `Cross-Origin-Opener-Policy` y `Cross-Origin-Embedder-Policy` (aislamiento de origen cruzado); sin `X-Powered-By`.
 - 📁 **Los archivos de los cómics nunca se suben:** solo viajan sus metadatos.
 
 ---
@@ -254,6 +264,7 @@ Las pruebas viven junto al código que prueban (`*.test.ts(x)`).
 1. 🗄️ **IndexedDB por usuario** (`panelvault-<id>`): cómics, páginas, progreso, marcadores y mapas de viñetas.
 2. 📤 **Bandeja de salida:** cada cambio se guarda primero en el dispositivo y se encola. Se envía al recuperar la red, al encolar y cada minuto. Las operaciones son **idempotentes** (PUT con UUID del cliente) y el progreso se resuelve con **"gana el último"**, la misma regla que el backend.
 3. 🛰️ **Service worker:** guarda las pantallas principales para abrirlas sin conexión. El detalle y el lector reciben el id por la query (`?id=`), así una sola copia sirve para cualquier cómic.
+4. 🪟 **Varias pestañas:** los cambios hechos en una pestaña se avisan a las demás (Shared Worker o BroadcastChannel) y la bandeja de salida se envía desde una sola, gracias a **Web Locks**.
 
 ---
 
@@ -311,8 +322,8 @@ Ver `.env.example`. Los archivos `.env*` reales nunca se suben a Git.
 
 ## 🧪 Pruebas y calidad
 
-- ✅ **393 pruebas** con Vitest y Testing Library: componentes, BFF, firma HMAC, cookies, renovación de tokens, IndexedDB, bandeja de salida, lector, importación de CBZ y PDF, accesibilidad.
-- 🎭 **Verificación de punta a punta** durante el desarrollo, con Playwright en un navegador real (registro, 2FA, biblioteca, lector, análisis, modo sin conexión y roles). Esos scripts no forman parte del repositorio.
+- ✅ **404 pruebas** con Vitest y Testing Library: componentes, BFF, firma HMAC, cookies, renovación de tokens, IndexedDB, bandeja de salida, lector, importación de CBZ y PDF, canal entre pestañas, cálculo del INP, orden del Event Loop y accesibilidad.
+- 🎭 **Verificación de punta a punta** durante el desarrollo, con Playwright en un navegador real: registro, 2FA, biblioteca, lector, análisis, modo sin conexión, roles, `crossOriginIsolated`, conteo de pestañas, sincronización en vivo entre pestañas, worker de importación, `Atomics.wait`/`notify`, desbloqueo del hilo desde otra pestaña e INP. Esos scripts no forman parte del repositorio.
 - 🧹 ESLint y TypeScript estricto sin errores.
 - 🤖 **Integración continua:** `.github/workflows/ci.yml` corre lint, tipos, pruebas y compilación en cada push a `main`.
 
@@ -340,6 +351,26 @@ Todo en planes gratuitos:
 docker build -t panelvault-frontend .
 docker run --rm -p 3000:3000 -e PANELVAULT_API_URL=http://host.docker.internal:9096 panelvault-frontend
 ```
+
+---
+
+## 🏁 Estado del proyecto
+
+**Completo.** Todo lo que pide el caso de estudio y los temas del curso está implementado y verificado:
+
+| Tema | Estado |
+|---|---|
+| Caso de estudio 1.2 (interfaz fluida, segundo plano, offline, multi-pestaña) | ✅ |
+| Caso de estudio 1.3 (IA en el servidor y lectura guiada) | ✅ |
+| 5 patrones de renderizado (SSG, ISR, SSR, Streaming SSR, CSR) | ✅ |
+| Event Loop: tasks y microtasks (demostración en vivo) | ✅ |
+| Web Worker, Shared Worker y Service Worker | ✅ |
+| `postMessage`, `SharedArrayBuffer` y `crossOriginIsolated` | ✅ |
+| Bloquear el hilo principal y desbloquearlo desde otra pestaña, sin cerrar el navegador | ✅ |
+| INP medido en vivo, menor a 200 ms en uso normal | ✅ |
+| Arquitectura de 7 capas, seguridad y despliegue gratuito | ✅ |
+
+**Para la demostración:** entra a **Laboratorio**, abre la misma página en una segunda pestaña y prueba "Bloquear hasta que otra pestaña lo libere": el contador de JavaScript se congela, la barra animada por el compositor sigue moviéndose, y desde la otra pestaña se libera el hilo.
 
 ---
 
