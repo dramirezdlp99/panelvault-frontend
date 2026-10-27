@@ -21,4 +21,5 @@ export const routes = {
   curationNew: "/curaduria/nueva",
   curationEdit: (id: string) => `/curaduria/${encodeURIComponent(id)}`,
   security: "/seguridad",
+  lab: "/laboratorio",
 } as const;
