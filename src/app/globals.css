@@ -118,6 +118,16 @@
   }
 }
 
+/* Barra del laboratorio: solo usa transform, así la anima el compositor aunque el hilo principal esté ocupado. */
+@keyframes pv-slide {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(200%);
+  }
+}
+
 @layer base {
   html {
     background-color: var(--pv-paper);
