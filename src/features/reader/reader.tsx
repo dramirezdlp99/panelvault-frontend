@@ -77,7 +77,7 @@ function ReaderMessage({ children }: { children: React.ReactNode }) {
 type ReaderProps = { comic: LocalComic; pages: Blob[]; savedProgress?: LocalProgress; startPage?: number };
 
 export function Reader({ comic, pages, savedProgress, startPage }: ReaderProps) {
-  const { db, sync } = useLocalStore();
+  const { db, sync, hub } = useLocalStore();
   const online = useOnlineStatus();
   const rtl = comic.readingDirection === "RIGHT_TO_LEFT";
   const preset = presetFor(comic.readingDirection);
@@ -104,6 +104,10 @@ export function Reader({ comic, pages, savedProgress, startPage }: ReaderProps) 
   const nextMap = usePanelMap(db, pages[state.page], preset, state.mode === "guided" && state.page < pages.length);
   const panels = useMemo(() => (panelMap.status === "ready" ? panelMap.panels : []), [panelMap]);
   const panelIndex = resolvedPanel(state);
+  const stateRef = useRef(state.page);
+  useEffect(() => {
+    stateRef.current = state.page;
+  }, [state.page]);
 
   useEffect(() => {
     if (panelMap.status === "ready") dispatch({ type: "panelsLoaded", page: state.page, count: panelMap.panels.length });
@@ -132,6 +136,20 @@ export function Reader({ comic, pages, savedProgress, startPage }: ReaderProps) 
     }, 600);
     return () => window.clearTimeout(timer);
   }, [db, comic.id, state.page, state.mode, panelIndex, pages.length]);
+
+  // Multi-pestaña: avisa a las demás pestañas en qué página vas y escucha las suyas.
+  useEffect(() => {
+    hub?.publish({ type: "reader-page", comicId: comic.id, page: state.page });
+  }, [hub, comic.id, state.page]);
+
+  useEffect(() => {
+    if (!hub) return;
+    return hub.subscribe((message) => {
+      if (message.type === "reader-page" && message.comicId === comic.id && message.page !== stateRef.current) {
+        setToast({ text: `En otra pestaña vas en la página ${message.page}.`, page: message.page });
+      }
+    });
+  }, [hub, comic.id]);
 
   // Con conexión: trae progreso y marcadores de otros dispositivos.
   useEffect(() => {
