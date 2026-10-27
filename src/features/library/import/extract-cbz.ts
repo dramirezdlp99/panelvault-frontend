@@ -1,18 +1,14 @@
 import { unzip, type Unzipped } from "fflate";
 
-import { ImportError, isImageName, MAX_PAGES, mimeFor, naturalCompare } from "./detect";
+import { isComicPage } from "./cbz-pages";
+import { ImportError, MAX_PAGES, mimeFor, naturalCompare } from "./detect";
+
+export { isComicPage };
 
 function unzipAsync(data: Uint8Array): Promise<Unzipped> {
   return new Promise((resolve, reject) => {
     unzip(data, (error, files) => (error ? reject(error) : resolve(files)));
   });
-}
-
-/** Ignora carpetas de sistema (__MACOSX) y archivos ocultos que algunos compresores agregan. */
-export function isComicPage(path: string): boolean {
-  const parts = path.split("/");
-  const name = parts[parts.length - 1];
-  return !parts.includes("__MACOSX") && !name.startsWith(".") && isImageName(name);
 }
 
 /** Extrae las páginas de un CBZ (un ZIP de imágenes), en orden natural de nombre. */
