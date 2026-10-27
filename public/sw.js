@@ -5,7 +5,7 @@
  *   porque el lector y el detalle leen el id en el navegador).
  * - /api/: nunca se guarda (datos privados y siempre frescos).
  */
-const VERSION = "pv-v1";
+const VERSION = "pv-v2";
 const STATIC_CACHE = `${VERSION}-static`;
 const PAGES_CACHE = `${VERSION}-pages`;
 const OFFLINE_URL = "/offline.html";
@@ -62,6 +62,9 @@ self.addEventListener("fetch", (event) => {
   if (request.method !== "GET") return;
   const url = new URL(request.url);
   if (url.origin !== self.location.origin || url.pathname.startsWith("/api/")) return;
+  // Los scripts de los workers van directo a la red (o a la caché HTTP del navegador): con el
+  // aislamiento de origen cruzado, un worker servido desde aquí podía no arrancar.
+  if (request.destination === "worker" || request.destination === "sharedworker") return;
 
   if (request.mode === "navigate") {
     event.respondWith(handleNavigation(request));
