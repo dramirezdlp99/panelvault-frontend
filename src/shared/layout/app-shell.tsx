@@ -9,6 +9,7 @@ import { SESSION_EXPIRED_EVENT } from "@/shared/api/http";
 import { hasRole, type SessionUser } from "@/shared/auth/roles";
 import { LocalStoreProvider } from "@/shared/offline/local-store";
 import { ServiceWorkerRegistration } from "@/shared/offline/service-worker";
+import { InpBadge } from "@/shared/performance/inp-badge";
 import { routes } from "@/shared/config/routes";
 import { cn } from "@/shared/lib/cn";
 import { ThemeToggle } from "@/shared/theme/theme-toggle";
@@ -84,6 +85,7 @@ export function AppShell({ user, children }: { user: SessionUser; children: Reac
               />
             </form>
             <div className="ml-auto flex items-center gap-2 sm:gap-3">
+              <InpBadge className="hidden sm:inline-flex" />
               <OnlinePill className="hidden sm:inline-flex" />
               <ThemeToggle />
               <UserMenu user={user} />
