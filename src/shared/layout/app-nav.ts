@@ -1,4 +1,4 @@
-import { BookMarked, BookOpen, Bookmark, Library, ScanSearch, ShieldCheck, Stamp, type LucideIcon } from "lucide-react";
+import { BookMarked, BookOpen, Bookmark, Cpu, Library, ScanSearch, ShieldCheck, Stamp, type LucideIcon } from "lucide-react";
 
 import type { Role } from "@/shared/auth/roles";
 import { routes } from "@/shared/config/routes";
@@ -21,6 +21,7 @@ export const appNavItems: NavItem[] = [
   { href: routes.analysis, label: "Análisis", icon: ScanSearch, mobile: true },
   { href: routes.curation, label: "Curaduría", icon: Stamp, minRole: "CURADOR" },
   { href: routes.security, label: "Seguridad", icon: ShieldCheck },
+  { href: routes.lab, label: "Laboratorio", icon: Cpu },
 ];
 
 /** Un enlace está activo en su ruta exacta y en sus subrutas. */
